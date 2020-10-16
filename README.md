@@ -42,7 +42,6 @@ Ce projet vise à mettre en place un outil de saisie du réseau d'eau potable en
 - [Pré-requis](#prerequis)
 - [Guide administrateur](#guide-administrateur)
 - [Guide utilisateur](#guide-utilisateur)
-- [Améliorations possibles](#ameliorations)
 
 
 ---
@@ -71,20 +70,6 @@ Ce projet vise à mettre en place un outil de saisie du réseau d'eau potable en
 	- '%PASSWORD%'
 - Lancer le projet QGis en activant les macros.
 
-### Personnalisation
-
-Certains champs sont une extension du standard RAEPA. Certains sont indispensables aux fonctionnalités du projet ("sec", "categorie"). 
-D'autres sont plus secondaires ("implantation", "joint", "statut_v","angle_v", "notes", "diametre","diam_rac_1","diam_rac_2", "ss_categorie").
-Enfin, certains peuvent appaître comme des doublons avec le standard ("materiau2"). Ils peuvent néanmois servir comme transition entre la nomenclature locale, et la nomenclature COVADIS.
-
-
-Le projet est donc largement personnalisable (ajout / suppression de champs, modifications de listes de valeurs...). Veiller néanmois :
-- à garder les champs inhérents au standard RAEPA
-- à ne pas modifier les listes de valeurs des champs inhérents au standard (sauf évolution du standard)
-- Si modification du champ catégorie, revoir dans le projet :
-	- la symbologie
-	- les formulaires de saisie
-	- les triggers PostgreSQL 
 
 
 ### Triggers
@@ -147,29 +132,29 @@ Penser également à activer les macros au démarrage du projet pour profiter de
 #### Créer une canalisation :
 
 - Passer la couche "Arcs" en mode édition
-- Créer une ligne. Dans le formulaire, laisser décoché le champ branchement.
+- Créer une ligne. Dans le formulaire, décocher le champ branchement, et effectuer les autres modifications attributaires
 - Enregistrer les modifications. Des noeuds seront automatiquement insérés s'ils n'existaient pas aux extrémités de l'arc. Si une extrémité de l'arc est sécant avec une autre canalisation, cette dernière sera automatiquement découpée au niveau du nouveau noeud.
 
 #### Créer un branchement :
 
 - Passer la couche "Arcs" en mode édition
-- Créer une ligne. Dans le formulaire, cocher dans le champ branchement
+- Créer une ligne, depuis la canalisation principale, vers l'autre extrémité du branchement. Dans le formulaire, cocher dans le champ branchement, et effectuer les modifications attributaires.
 - Enregistrer les modifications. Des noeuds seront automatiquement insérés s'ils n'existaient pas aux extrémités de l'arc. Cette fois ci, si une extrémité de l'arc est sécant avec une autre canalisation, celle-ci ne sera pas découpée.
 
 #### Créer un appareil :
 
 - Passer la couche "Noeuds" en mode édition
-- Créer le point
+- Créer le point sur une canalisation existante.
 - Enregistrer les modifications
 
-NB : Si le point est un appareil non indéterminé (champ c2a_type_1), alors le noeud est ainsi considéré comme "coupant" (sauf modification de l'attribut dans l'onglet "topologie"). 
-Ainsi, lorsque le point est positionné sur un arc, celui-ci sera automatiquement découpé en deux arcs.
+NB : Si le point est un appareil non indéterminé (champ c2a_type_1), alors le noeud est ainsi considéré comme "coupant" (sauf modification de l'attribut dans l'onglet "topologie"). Ainsi, lorsque le point est positionné sur un arc, celui-ci sera automatiquement découpé en deux arcs.
+Si le noeud créé est non coupant, la canalisation ne sera pas découpée.
 
 #### Modifier la géométrie d'un arc :
 
 Pour modifier la géométrie d'un arc existant, plusieurs cas sont possibles. 
 - Lorsque la géométrie de l'arc doit être modifiée au niveau d'une entrée de la couche noeud, modifier directement l'emplacement du noeud. L'arc ou les arcs restera/ront connecté(s) au noeud. 
-- Lorsque la géométrie de l'arc doit être modifiée indépendamment d'un noeud, passer la couche 'Arcs' en mode édition, et modifier la géométrie normalement.
+- Lorsque la géométrie de l'arc doit être modifiée indépendamment d'un noeud existant, passer la couche 'Arcs' en mode édition, et modifier la géométrie normalement.
 
 #### Découper un arc :
 
@@ -187,21 +172,6 @@ NB : Il est impossible de fusionner trois arcs en même temps.
 Dépend des configurations :
 - Si les deux arcs se terminent par des noeuds "indéterminés", déplacer un des deux noeuds pour le placer sur l'autre. Un des deux noeuds sera supprimé
 - Si un des deux arcs se termine par un appareil, déplacer un des deux noeuds pour le placer sur l'autre. Le noeud indéterminé sera supprimé
-- Si les deux arcs se terminent par un appareil, l'opération est impossible. Joindre les arcs par une canalisation, ou bien modifier les attributs d'un noeud pour le rendre indéterminé et réitérer l'opération.
-
-### Aides à la saisie du réseau
-
-> Deux couches "Dessin" et "Cercles", placées dans le groupe "Couches de dessin (macro)" permettent de saisir avec précision des objets grâce à un accrochage à une couche (exemple cadastre).
-- Insérer une entité dans la couche "Dessin" (la géométrie sera le centre du cercle, et l'attribut "rayon" son rayon.
-- Un buffer est automatiquement inséré dans la couche "Cercles", lié aux informations rentrées dans la couche "Dessin". 
+- Si les deux arcs se terminent par un appareil, l'opération est impossible : deux appareils ne peuvent être superposés. Joindre les arcs par une canalisation, ou bien modifier les attributs d'un noeud pour le rendre indéterminé et réitérer l'opération.
 
 
-
-## Améliorations possibles <a name="ameliorations"/>
-
-> De nombreuses amélioration du projet sont à prévoir...
-
-- Développer la partie assainissement
-- Amélioration de la fluidité du projet QGis, notamment l'actualisation plus dynamique de la couche "Canalisation" lors du déplacement de noeuds
-- Recherche d'une solution plus perenne face au problème d'accrochage au géométrie. Lorsqu'une entité est saisie (exemple canalisation), l'accrochage a cette entité saisie n'est pas immédiat, et il est nécessaire de rafraîchir la couche. Face à ce problème, une solution temporaire a été mise en place, à travers les macros définis dans les propriétés du projet, de recharger le style de la couche dès qu'une géométrie est modifiée, pour forcer le rafraîchissement.
-- Toute autre suggestion améliorant la performance, la fluidité, ou la cohérence du projet...
